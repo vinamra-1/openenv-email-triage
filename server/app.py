@@ -41,3 +41,10 @@ def health():
 @app.get("/state")
 def state():
     return {"episode_id": str(uuid.uuid4()), "step_count": 0}
+
+import uvicorn
+def main():
+    uvicorn.run("server.app:app", host="0.0.0.0", port=7860)
+
+if __name__ == "__main__":
+    main()
