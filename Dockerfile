@@ -9,11 +9,6 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY . .
 
-ENV PYTHONPATH=/app/src
-
 EXPOSE 7860
-
-HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
-    CMD curl -f http://localhost:7860/health || exit 1
 
 CMD ["python", "-m", "uvicorn", "src.envs.email_triage.server.app:app", "--host", "0.0.0.0", "--port", "7860"]
