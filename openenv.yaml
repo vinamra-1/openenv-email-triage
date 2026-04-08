@@ -1,0 +1,38 @@
+name: email-triage
+version: 1.0.0
+description: "Email Triage RL Environment - classifies emails into SPAM/WORK/PERSONAL with 3 difficulty levels"
+author: Vinamra1
+license: MIT
+tags:
+  - email
+  - triage
+  - classification
+  - nlp
+  - real-world
+
+environment:
+  module: src.envs.email_triage.server.app
+  class: EmailEnvironment
+
+tasks:
+  - name: easy_triage
+    description: "Classify obvious spam vs non-spam emails"
+    difficulty: easy
+    max_steps: 1
+    reward_range: [0.0, 1.0]
+
+  - name: medium_triage
+    description: "Classify emails into SPAM, WORK, or PERSONAL"
+    difficulty: medium
+    max_steps: 1
+    reward_range: [0.0, 1.0]
+
+  - name: hard_triage
+    description: "Classify ambiguous emails that could belong to multiple categories"
+    difficulty: hard
+    max_steps: 1
+    reward_range: [0.0, 1.0]
+
+server:
+  port: 8000
+  host: 0.0.0.0
