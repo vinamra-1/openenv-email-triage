@@ -10,13 +10,6 @@ SYSTEM_PROMPT = "You are an Email Triage Assistant. Classify the email into exac
 
 TASKS = ["easy_triage", "medium_triage", "hard_triage"]
 
-# Initialize client ONCE at module level using injected env vars
-client = OpenAI(
-    base_url=os.environ["API_BASE_URL"],
-    api_key=os.environ["API_KEY"],
-)
-MODEL_NAME = os.environ.get("MODEL_NAME", "Qwen/Qwen2.5-72B-Instruct")
-
 
 def reset_env(task):
     try:
@@ -37,9 +30,15 @@ def step_env(category):
 
 
 def get_llm_action(email_text):
-    # LLM is the PRIMARY decision maker — no rule-based fallback
+    # Client initialized HERE (lazy) so validator-injected env vars are available
+    client = OpenAI(
+        base_url=os.environ["API_BASE_URL"],
+        api_key=os.environ["API_KEY"],
+    )
+    model_name = os.environ.get("MODEL_NAME", "Qwen/Qwen2.5-72B-Instruct")
+
     response = client.chat.completions.create(
-        model=MODEL_NAME,
+        model=model_name,
         messages=[
             {"role": "system", "content": SYSTEM_PROMPT},
             {"role": "user", "content": email_text}
