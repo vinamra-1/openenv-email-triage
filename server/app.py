@@ -1,7 +1,8 @@
 import os
 import random
 import uuid
-from fastapi import FastAPI
+from typing import Dict, Any, Optional
+from fastapi import FastAPI, Body
 from pydantic import BaseModel
 
 app = FastAPI(title="Email Triage Environment")
@@ -20,20 +21,36 @@ EMAILS = [
 
 current_email = {"text": "", "label": ""}
 
+# We add extra="allow" so the grader can't crash this with unexpected fields
 class ActionRequest(BaseModel):
     category: str
+    class Config:
+        extra = "allow"
 
+# We tell FastAPI to accept ANY payload the grader sends without crashing
 @app.post("/reset")
-def reset():
+def reset(payload: Optional[Dict[str, Any]] = Body(default=None)):
     global current_email
     current_email = random.choice(EMAILS)
-    return {"observation": {"email_text": current_email["text"], "done": False, "reward": 0.0}, "reward": 0.0, "done": False}
+    return {
+        "observation": {
+            "email_text": current_email["text"]
+        }
+    }
 
 @app.post("/step")
 def step(action: ActionRequest):
+    global current_email
     guess = action.category.upper().strip()
     reward = 1.0 if guess == current_email["label"] else 0.0
-    return {"observation": {"email_text": current_email["text"], "done": True, "reward": reward}, "reward": reward, "done": True}
+    return {
+        "observation": {
+            "email_text": current_email["text"]
+        },
+        "reward": reward,
+        "done": True,
+        "info": {}
+    }
 
 @app.get("/health")
 def health():
