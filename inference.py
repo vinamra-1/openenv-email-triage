@@ -6,12 +6,9 @@ import requests
 SERVER_URL = os.getenv("ENV_SERVER_URL", "http://localhost:7860")
 MAX_STEPS = 5
 
-API_KEY = os.getenv("HF_TOKEN") or os.getenv("API_KEY")
+API_KEY = os.getenv("HF_TOKEN") or os.getenv("API_KEY") or "dummy-key"
 API_BASE_URL = os.getenv("API_BASE_URL") or "https://router.huggingface.co/v1"
 MODEL_NAME = os.getenv("MODEL_NAME") or "Qwen/Qwen2.5-72B-Instruct"
-
-if not API_KEY:
-    raise ValueError("HF_TOKEN/API_KEY not set")
 
 SYSTEM_PROMPT = "You are an Email Triage Assistant. Classify the email into exactly one of: [SPAM] [WORK] [PERSONAL]. Respond ONLY with the category in brackets."
 
@@ -96,6 +93,10 @@ if __name__ == "__main__":
     print("=" * 50, flush=True)
     print("Email Triage - Inference Script", flush=True)
     print("=" * 50, flush=True)
+
+    print(f"[DEBUG] API_BASE_URL={API_BASE_URL}", flush=True)
+    print(f"[DEBUG] MODEL_NAME={MODEL_NAME}", flush=True)
+    print(f"[DEBUG] API_KEY={'set' if API_KEY else 'NOT SET'}", flush=True)
 
     client = OpenAI(base_url=API_BASE_URL, api_key=API_KEY)
 
