@@ -1,4 +1,4 @@
-﻿import os
+import os
 import sys
 import re
 import requests
@@ -11,7 +11,7 @@ MAX_STEPS = 5
 
 try:
     from openai import OpenAI
-    client = OpenAI(base_url=API_BASE_URL, api_key=HF_TOKEN)
+    client = OpenAI(base_url=os.environ.get("API_BASE_URL"), api_key=os.environ.get("API_KEY"))
 except Exception:
     client = None
 
