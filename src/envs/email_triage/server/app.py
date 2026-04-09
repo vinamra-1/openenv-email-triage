@@ -1,6 +1,6 @@
 ﻿import random
 import uuid
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from pydantic import BaseModel
 
 app = FastAPI(title="Email Triage Environment")
@@ -22,6 +22,14 @@ current_email = {"text": "", "label": ""}
 class ActionRequest(BaseModel):
     category: str
 
+@app.get("/")
+def root():
+    return {"status": "ok", "service": "email-triage-env"}
+
+@app.api_route("/health", methods=["GET", "HEAD"])
+def health():
+    return {"status": "healthy"}
+
 @app.post("/reset")
 def reset():
     global current_email
@@ -33,10 +41,6 @@ def step(action: ActionRequest):
     guess = action.category.upper().strip()
     reward = 1.0 if guess == current_email["label"] else 0.0
     return {"observation": {"email_text": current_email["text"], "done": True, "reward": reward}, "reward": reward, "done": True}
-
-@app.get("/health")
-def health():
-    return {"status": "healthy"}
 
 @app.get("/state")
 def state():
