@@ -3,7 +3,7 @@ import uuid
 from fastapi import FastAPI, Request
 from pydantic import BaseModel
 
-app = FastAPI(title="Email Triage Environment")
+app = FastAPI(title="Email Triage Environment", version="0.1.0")
 
 EMAILS = [
     {"text": "Congratulations! You won a 1000 gift card. Click here!", "label": "SPAM"},
@@ -29,6 +29,61 @@ def root():
 @app.api_route("/health", methods=["GET", "HEAD"])
 def health():
     return {"status": "healthy"}
+
+@app.get("/metadata")
+def metadata():
+    return {
+        "name": "email-triage",
+        "description": "An email triage environment where the agent classifies emails into SPAM, WORK, or PERSONAL categories.",
+        "version": "0.1.0",
+        "mode": "simulation"
+    }
+
+@app.get("/schema")
+def schema():
+    return {
+        "action": {
+            "type": "object",
+            "properties": {
+                "category": {
+                    "type": "string",
+                    "enum": ["SPAM", "WORK", "PERSONAL"]
+                }
+            },
+            "required": ["category"]
+        },
+        "observation": {
+            "type": "object",
+            "properties": {
+                "email_text": {"type": "string"},
+                "done": {"type": "boolean"},
+                "reward": {"type": "number"}
+            }
+        },
+        "state": {
+            "type": "object",
+            "properties": {
+                "episode_id": {"type": "string"},
+                "step_count": {"type": "integer"}
+            }
+        }
+    }
+
+@app.post("/mcp")
+async def mcp(request: Request):
+    body = await request.json()
+    return {
+        "jsonrpc": "2.0",
+        "id": body.get("id", 1),
+        "result": {
+            "tools": [
+                {
+                    "name": "step",
+                    "description": "Classify the email into SPAM, WORK, or PERSONAL"
+                }
+            ]
+        }
+    }
 
 @app.post("/reset")
 def reset():
