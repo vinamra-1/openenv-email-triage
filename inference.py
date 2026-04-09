@@ -4,7 +4,6 @@ import re
 import requests
 from openai import OpenAI
 
-# 1. Scaler Checklist Requirements (Must be at the top)
 API_BASE_URL = os.getenv("API_BASE_URL", "https://router.huggingface.co/v1")
 MODEL_NAME = os.getenv("MODEL_NAME", "Qwen/Qwen2.5-72B-Instruct")
 HF_TOKEN = os.getenv("HF_TOKEN")
@@ -12,17 +11,21 @@ HF_TOKEN = os.getenv("HF_TOKEN")
 SERVER_URL = os.getenv("ENV_SERVER_URL", "http://localhost:7860")
 MAX_STEPS = 5
 
-# 2. EXACT Syntax match for the Phase 2 Auto-Grader Regex
-if "API_KEY" in os.environ and "API_BASE_URL" in os.environ:
-    client = OpenAI(
-        base_url=os.environ["API_BASE_URL"],
-        api_key=os.environ["API_KEY"]
-    )
-else:
-    client = OpenAI(
-        base_url=API_BASE_URL,
-        api_key=HF_TOKEN
-    )
+try:
+    if "API_KEY" in os.environ and "API_BASE_URL" in os.environ:
+        client = OpenAI(
+            base_url=os.environ["API_BASE_URL"],
+            api_key=os.environ["API_KEY"]
+        )
+    else:
+        # We add 'or "dummy"' so your local computer doesn't crash!
+        client = OpenAI(
+            base_url=API_BASE_URL,
+            api_key=HF_TOKEN or "dummy_local_key"
+        )
+except Exception as e:
+    print(f"Warning: OpenAI client failed to initialize: {e}")
+    client = None
 
 SYSTEM_PROMPT = "You are an Email Triage Assistant. Classify the email into exactly one of: [SPAM] [WORK] [PERSONAL]. Respond ONLY with the category in brackets."
 TASKS = ["easy_triage", "medium_triage", "hard_triage"]
