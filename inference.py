@@ -4,22 +4,23 @@ import re
 import requests
 from openai import OpenAI
 
-SERVER_URL = os.environ.get("ENV_SERVER_URL", "http://localhost:7860")
-MODEL_NAME = os.environ.get("MODEL_NAME", "Qwen/Qwen2.5-72B-Instruct")
+# 1. Variables EXACTLY as the Scaler checklist demands
+API_BASE_URL = os.getenv("API_BASE_URL", "https://router.huggingface.co/v1")
+MODEL_NAME = os.getenv("MODEL_NAME", "Qwen/Qwen2.5-72B-Instruct")
+HF_TOKEN = os.getenv("HF_TOKEN")  # CRITICAL: No default value here!
+
+SERVER_URL = os.getenv("ENV_SERVER_URL", "http://localhost:7860")
 MAX_STEPS = 5
 
-# Initialize client EXACTLY as the Scaler grader requested
+# 2. Client Initialization (Satisfies both the checklist and Phase 2 proxy)
 try:
     client = OpenAI(
-        base_url=os.environ["API_BASE_URL"],
-        api_key=os.environ["API_KEY"]
+        base_url=API_BASE_URL,
+        api_key=os.environ.get("API_KEY", HF_TOKEN)
     )
-except KeyError:
-    # Fallback ONLY for local testing if variables aren't set
-    client = OpenAI(
-        base_url="https://router.huggingface.co/v1",
-        api_key="dummy_local_key"
-    )
+except Exception as e:
+    print(f"API Init Error: {e}", file=sys.stderr)
+    client = None
 
 SYSTEM_PROMPT = "You are an Email Triage Assistant. Classify the email into exactly one of: [SPAM] [WORK] [PERSONAL]. Respond ONLY with the category in brackets."
 TASKS = ["easy_triage", "medium_triage", "hard_triage"]
@@ -29,7 +30,6 @@ def reset_env(task):
         r = requests.post(f"{SERVER_URL}/reset", json={"task": task}, timeout=10)
         return r.json()
     except Exception as e:
-        print(f"Env reset error: {e}")
         return {"observation": {"email_text": "Test email"}}
 
 def step_env(category):
@@ -37,10 +37,10 @@ def step_env(category):
         r = requests.post(f"{SERVER_URL}/step", json={"category": category}, timeout=10)
         return r.json()
     except Exception as e:
-        print(f"Env step error: {e}")
         return {"reward": 0.0, "done": True}
 
 def get_llm_action(email_text):
+    if not client: return "SPAM"
     try:
         response = client.chat.completions.create(
             model=MODEL_NAME,
@@ -55,7 +55,6 @@ def get_llm_action(email_text):
         match = re.search(r'\[(.*?)\]', text)
         return match.group(1).upper() if match else "SPAM"
     except Exception as e:
-        # CRITICAL: Print the error so it shows up in the Scaler logs!
         print(f"API Error: {e}", file=sys.stderr)
         return "SPAM"
 
