@@ -7,13 +7,9 @@ SERVER_URL = os.getenv("ENV_SERVER_URL", "http://localhost:7860")
 MAX_STEPS = 5
 
 API_KEY = os.getenv("HF_TOKEN") or os.getenv("API_KEY")
-API_BASE_URL = os.getenv("API_BASE_URL")
-MODEL_NAME = os.getenv("MODEL_NAME")
+API_BASE_URL = os.getenv("API_BASE_URL") or "https://router.huggingface.co/v1"
+MODEL_NAME = os.getenv("MODEL_NAME") or "Qwen/Qwen2.5-72B-Instruct"
 
-if not API_BASE_URL:
-    raise ValueError("API_BASE_URL not set")
-if not MODEL_NAME:
-    raise ValueError("MODEL_NAME not set")
 if not API_KEY:
     raise ValueError("HF_TOKEN/API_KEY not set")
 
