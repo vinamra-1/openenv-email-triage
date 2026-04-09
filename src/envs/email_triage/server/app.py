@@ -34,7 +34,7 @@ def health():
 def metadata():
     return {
         "name": "email-triage",
-        "description": "An email triage environment where the agent classifies emails into SPAM, WORK, or PERSONAL categories.",
+        "description": "An email triage environment where the agent classifies emails into SPAM, WORK, or PERSONAL.",
         "version": "0.1.0",
         "mode": "simulation"
     }
