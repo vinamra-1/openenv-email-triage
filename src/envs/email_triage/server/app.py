@@ -1,6 +1,22 @@
 ﻿from fastapi import FastAPI, Request
+import random
+import uuid
 
 app = FastAPI()
+
+current_email = {"text": "", "label": ""}
+
+EMAILS = [
+    {"text": "Congratulations! You won a gift card. Click here!", "label": "SPAM"},
+    {"text": "Hi team, please review the attached Q3 report.", "label": "WORK"},
+    {"text": "Hey, can you pick up milk on your way home?", "label": "PERSONAL"},
+    {"text": "URGENT: Your account has been compromised.", "label": "SPAM"},
+    {"text": "Are we still meeting for lunch tomorrow?", "label": "PERSONAL"},
+    {"text": "Server deployment tonight at 2 AM. Please merge.", "label": "WORK"},
+    {"text": "FREE cruise selected for you! Limited slots!", "label": "SPAM"},
+    {"text": "Can you review my PR before EOD?", "label": "WORK"},
+    {"text": "Moms birthday next week, dont forget to call!", "label": "PERSONAL"},
+]
 
 @app.head("/health")
 @app.get("/health")
@@ -8,51 +24,36 @@ app = FastAPI()
 def health():
     return {"status": "ok"}
 
-@app.get("/metadata")
-def metadata():
-    return {
-        "name": "email-triage",
-        "description": "An email triage environment where the agent classifies emails into SPAM, WORK, or PERSONAL.",
-        "version": "0.1.0",
-        "mode": "simulation"
-    }
-
-@app.get("/schema")
-def schema():
-    return {
-        "action": {
-            "type": "object",
-            "properties": {"category": {"type": "string", "enum": ["SPAM", "WORK", "PERSONAL"]}},
-            "required": ["category"]
-        },
-        "observation": {
-            "type": "object",
-            "properties": {"email_text": {"type": "string"}, "done": {"type": "boolean"}, "reward": {"type": "number"}}
-        },
-        "state": {
-            "type": "object",
-            "properties": {"episode_id": {"type": "string"}, "step_count": {"type": "integer"}}
-        }
-    }
-
-@app.post("/mcp")
-async def mcp(request: Request):
-    body = await request.json()
-    return {
-        "jsonrpc": "2.0",
-        "id": body.get("id", 1),
-        "result": {"tools": [{"name": "step", "description": "Classify the email into SPAM, WORK, or PERSONAL"}]}
-    }
-
 @app.post("/reset")
 def reset():
-    return {"email_text": "Hi team, please review the attached invoice.", "done": False, "reward": 0.0}
+    global current_email
+    current_email = random.choice(EMAILS)
+    return {
+        "observation": {
+            "email_text": current_email["text"],
+            "done": False,
+            "reward": 0.0
+        },
+        "reward": 0.0,
+        "done": False
+    }
 
 @app.post("/step")
 async def step(request: Request):
+    global current_email
     body = await request.json()
-    return {"email_text": "", "done": True, "reward": 1.0}
+    category = body.get("category", "").upper().strip()
+    reward = 1.0 if category == current_email["label"] else 0.0
+    return {
+        "observation": {
+            "email_text": current_email["text"],
+            "done": True,
+            "reward": reward
+        },
+        "reward": reward,
+        "done": True
+    }
 
 @app.get("/state")
 def state():
-    return {"episode_id": "ep_001", "step_count": 1}
+    return {"episode_id": str(uuid.uuid4()), "step_count": 0}
